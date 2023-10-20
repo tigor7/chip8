@@ -1,1 +1,4 @@
-chip8.exe
+main.exe
+SDL2.dll
+.vscode
+bin
