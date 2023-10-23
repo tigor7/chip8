@@ -1,7 +1,6 @@
 import types
 import system
 import strformat
-import os
 import std/random
 import std/math
 

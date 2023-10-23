@@ -16,6 +16,9 @@ template sdlFailIf(condition: typed, reason: string) =
     reason & ", SDL error " & $getError()
   )
 
+proc `/`(x, y: uint64): float = x.float / y.float
+
+
 proc loadFonts(chip8: var Chip8) =
   const startMemory = 0x0050
   const fonts: array[80, uint8] = [
@@ -86,13 +89,11 @@ proc main =
   sdlFailIf renderer.isNil: "renderer could not be created"
   defer: renderer.destroy()
 
-  # Initial screen clear
-  # renderer.setDrawColor(240, 231, 123)
   var running = true
   var paused = false
-  var withStep = false
   while running:
     # Handle input()
+    var start = getPerformanceCounter()
     var event = defaultEvent
     while pollEvent(event):
       case event.kind
@@ -178,8 +179,12 @@ proc main =
         discard
     if paused:
       continue
-    emulateInstruction(chip8)
-    delay(2)
+    for i in 0..<(floordiv(700, 60)): # 700 instructions per second
+      emulateInstruction(chip8)
+    var endTime = getPerformanceCounter()
+    var timeElapsed = floordiv((endTime - start), 1000) /
+        getPerformanceFrequency()
+    delay((if 17 > timeElapsed: 17 - uint32(timeElapsed) else: 0))
     if chip8.draw:
       updateScreen(chip8, renderer)
       chip8.draw = false
