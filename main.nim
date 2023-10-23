@@ -62,6 +62,12 @@ proc updateScreen(chip8: var Chip8, renderer: RendererPtr) =
         var r = rect(x = cint(i*20), y = cint(j*20), w = 20, h = 20)
         renderer.fillRect(addr r)
   renderer.present()
+proc updateTimers(chip8: var Chip8) =
+  if chip8.delayTimer > 0:
+    chip8.delayTimer -= 1
+
+  if chip8.soundTimer > 0:
+    chip8.soundTimer -= 1
 
 proc main =
   var chip8 = Chip8()
@@ -188,5 +194,5 @@ proc main =
     if chip8.draw:
       updateScreen(chip8, renderer)
       chip8.draw = false
-
+    updateTimers(chip8)
 main()

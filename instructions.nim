@@ -142,7 +142,8 @@ proc emulateInstruction*(chip8: var Chip8) =
         if x + uint8(j) >= 64:
           break
         if (sprite and uint8(0x80 shr j)) != 0:
-          if chip8.display[(y + uint8(i)) * 64 + x + uint8(j)]:
+          if chip8.display[((uint16(y + uint8(i)) * 64) + x + uint8(
+              j))]:
             chip8.registers[0xF] = 1
 
           chip8.display[((uint16(y + uint8(i)) * 64) + x + uint8(
