@@ -19,5 +19,8 @@ type
     PC*: uint16
     I*: uint16
     inst*: Inst
+    keypad*: array[16, bool]
+    delayTimer*: uint8
+    soundTimer*: uint8
 
 

@@ -9,22 +9,6 @@ const
   ScreenW = 64 * Factor
   ScreenH = 32 * Factor
 
-
-
-# type
-#   Chip8 = object
-#     memory: array[0x1000, uint8]
-#     registers: array[0x10, uint8]
-#     display: array[64*32, bool]
-#     pc: uint16
-#     nnn: uint16
-#     nn: uint8
-#     n: uint8
-#     x: uint8
-#     y: uint8
-#     i: uint16
-#     vn: uint8
-
 type SDLException = object of Defect
 
 template sdlFailIf(condition: typed, reason: string) =
@@ -77,13 +61,12 @@ proc updateScreen(chip8: var Chip8, renderer: RendererPtr) =
   renderer.present()
 
 proc main =
-
   var chip8 = Chip8()
   chip8.PC = 0x200 # Roms start at 0x200
   chip8.draw = false
   loadFonts(chip8)
 
-  loadROM(chip8, "./roms/test_opcode.ch8")
+  loadROM(chip8, "./roms/Tetris.ch8")
 
   sdlFailIf(not sdl2.init(INIT_VIDEO)):
     "SDL2 initialization failed"
@@ -122,14 +105,81 @@ proc main =
           running = false
         of K_SPACE:
           paused = not paused
+        of K_1:
+          chip8.keypad[1] = true
+        of K_2:
+          chip8.keypad[2] = true
+        of K_3:
+          chip8.keypad[3] = true
+        of K_4:
+          chip8.keypad[0xC] = true
+        of K_q:
+          chip8.keypad[4] = true
+        of K_w:
+          chip8.keypad[5] = true
+        of K_e:
+          chip8.keypad[6] = true
+        of K_r:
+          chip8.keypad[0xD] = true
+        of K_a:
+          chip8.keypad[7] = true
+        of K_s:
+          chip8.keypad[8] = true
+        of K_d:
+          chip8.keypad[9] = true
+        of K_f:
+          chip8.keypad[0xE] = true
+        of K_z:
+          chip8.keypad[0xA] = true
+        of K_x:
+          chip8.keypad[0] = true
+        of K_c:
+          chip8.keypad[0xB] = true
+        of K_v:
+          chip8.keypad[0xF] = true
         else:
           discard
+      of KeyUp:
+        case event.key.keysym.sym
+        of K_1:
+          chip8.keypad[1] = false
+        of K_2:
+          chip8.keypad[2] = false
+        of K_3:
+          chip8.keypad[3] = false
+        of K_4:
+          chip8.keypad[0xC] = false
+        of K_q:
+          chip8.keypad[4] = false
+        of K_w:
+          chip8.keypad[5] = false
+        of K_e:
+          chip8.keypad[6] = false
+        of K_r:
+          chip8.keypad[0xD] = false
+        of K_a:
+          chip8.keypad[7] = false
+        of K_s:
+          chip8.keypad[8] = false
+        of K_d:
+          chip8.keypad[9] = false
+        of K_f:
+          chip8.keypad[0xE] = false
+        of K_z:
+          chip8.keypad[0xA] = false
+        of K_x:
+          chip8.keypad[0] = false
+        of K_c:
+          chip8.keypad[0xB] = false
+        of K_v:
+          chip8.keypad[0xF] = false
+        else: discard
       else:
         discard
     if paused:
       continue
     emulateInstruction(chip8)
-    delay(16)
+    delay(2)
     if chip8.draw:
       updateScreen(chip8, renderer)
       chip8.draw = false

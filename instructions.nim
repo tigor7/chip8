@@ -2,6 +2,10 @@ import types
 import system
 import strformat
 import os
+import std/random
+import std/math
+
+randomize()
 
 proc emulateInstruction*(chip8: var Chip8) =
   # Fetch instruction
@@ -87,7 +91,10 @@ proc emulateInstruction*(chip8: var Chip8) =
       if (uint16(chip8.registers[chip8.inst.X]) + uint16(chip8.registers[
           chip8.inst.Y]) > 255):
         chip8.registers[0xF] = 1
+      else:
+        chip8.registers[0xF] = 0
       chip8.registers[chip8.inst.X] += chip8.registers[chip8.inst.Y]
+
     if chip8.inst.N == 0x5:
       if (chip8.registers[chip8.inst.X] < chip8.registers[chip8.inst.Y]):
         chip8.registers[0xF] = 0
@@ -118,7 +125,9 @@ proc emulateInstruction*(chip8: var Chip8) =
   of 0xB:
     # 0xBNNN
     chip8.PC = chip8.registers[0] + chip8.inst.NNN
-
+  of 0xC:
+    # 0xCXNN returns random
+    chip8.registers[chip8.inst.X] = uint8(rand(0..255)) and chip8.inst.NN
   of 0xD:
     # 0xDXYN Draw at X, Y coordinates
     echo fmt("Draw N {chip8.inst.N} height sprite at coords V{chip8.inst.X} (0x{chip8.registers[chip8.inst.X]:04X}), V{chip8.inst.Y} (0x{chip8.registers[chip8.inst.Y]:04X}) from location I (0x{chip8.I:04X})")
@@ -140,9 +149,52 @@ proc emulateInstruction*(chip8: var Chip8) =
           chip8.display[((uint16(y + uint8(i)) * 64) + x + uint8(
               j))] = chip8.display[((uint16(y + uint8(i)) * 64) + x + uint8(j))] xor true
     chip8.draw = true
+  of 0xE:
+    if chip8.inst.NN == 0x9E:
+      if chip8.keypad[chip8.registers[chip8.inst.X]]:
+        chip8.PC += 2
+    elif chip8.inst.NN == 0xA1:
+      if not chip8.keypad[chip8.registers[chip8.inst.X]]:
+        chip8.PC += 2
   of 0xF:
+    if chip8.inst.NN == 0x0A:
+      chip8.PC -= 2
+      for i in 0..<chip8.keypad.len:
+        if chip8.keypad[i]:
+          chip8.registers[chip8.inst.X] = uint8(i)
+          chip8.PC += 4
+
+    if chip8.inst.NN == 0x07:
+      chip8.registers[chip8.inst.X] = chip8.delayTimer
+
+    if chip8.inst.NN == 0x15:
+      chip8.delayTimer = chip8.registers[chip8.inst.X]
+
+    if chip8.inst.NN == 0x18:
+      chip8.soundTimer = chip8.registers[chip8.inst.X]
+
     if chip8.inst.NN == 0x1E:
       chip8.I += chip8.registers[chip8.inst.X]
+
+    if chip8.inst.NN == 0x229:
+      chip8.I = chip8.registers[chip8.inst.X] * 5
+
+    if chip8.inst.NN == 0x33:
+      var bcd: uint8 = chip8.registers[chip8.inst.X]
+      chip8.memory[chip8.I + 2] = bcd mod 10
+      bcd = floordiv(bcd, 10)
+      chip8.memory[chip8.I + 1] = bcd mod 10
+      bcd = floordiv(bcd, 10)
+      chip8.memory[chip8.I] = bcd
+
+    if chip8.inst.NN == 0x55:
+      for i in uint16(0)..chip8.inst.X:
+        chip8.memory[chip8.I + i] = chip8.registers[i]
+
+    if chip8.inst.NN == 0x65:
+      for i in uint16(0)..chip8.inst.X:
+        chip8.registers[i] = chip8.memory[chip8.I + i]
+
   else:
     echo "Unimplemented Opcode"
 
